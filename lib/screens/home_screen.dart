@@ -588,14 +588,16 @@
 // }
 
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:nutilog/onboarding/onboarding_flow.dart';
 import 'package:nutilog/utils/helper_function.dart';
+
 import '../colors.dart';
-import '../state/app_state.dart';
 import '../provider/change_notifier_provider.dart';
-import '../widgets/deficit_badge.dart';
+import '../state/app_state.dart';
 import '../widgets/calorie_ring_painter.dart';
+import '../widgets/deficit_badge.dart';
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 class HomeScreen extends StatelessWidget {
@@ -759,7 +761,7 @@ class HomeScreen extends StatelessWidget {
                                   shape: BoxShape.circle,
                                   color: state.isToday
                                       ? AppColors.green
-                                      : AppColors.mutedLight, 
+                                      : AppColors.mutedLight,
                                 ),
                               ),
                             ),

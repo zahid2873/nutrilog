@@ -151,7 +151,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
       setState(() {
         _result = jsonDecode(text);
         debugPrint(_result.toString());
-
+        _controller.clear();
         _loading = false;
       });
     } catch (e) {
@@ -225,399 +225,71 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              Text(
-                'Log Food',
-                style: interTight(size: 22, weight: FontWeight.w800),
-              ),
-              Text(
-                'AI-powered calorie estimation',
-                style: interTight(size: 12, color: AppColors.muted),
-              ),
-              const SizedBox(height: 20),
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                Text(
+                  'Log Food',
+                  style: interTight(size: 22, weight: FontWeight.w800),
+                ),
+                Text(
+                  'AI-powered calorie estimation',
+                  style: interTight(size: 12, color: AppColors.muted),
+                ),
+                const SizedBox(height: 20),
 
-              // Meal selector tabs
-              Row(
-                children: ['Breakfast', 'Lunch', 'Dinner', 'Snack']
-                    .map(
-                      (m) => Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(right: m != 'Snack' ? 6 : 0),
-                          child: GestureDetector(
-                            onTap: () => setState(() => _meal = m),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _meal == m ? _mealBg(m) : Colors.white,
-                                border: Border.all(
-                                  color: _meal == m
-                                      ? _mealColor(m)
-                                      : Colors.transparent,
-                                  width: 2,
+                // Meal selector tabs
+                Row(
+                  children: ['Breakfast', 'Lunch', 'Dinner', 'Snack']
+                      .map(
+                        (m) => Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              right: m != 'Snack' ? 6 : 0,
+                            ),
+                            child: GestureDetector(
+                              onTap: () => setState(() => _meal = m),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
                                 ),
-                                borderRadius: BorderRadius.circular(14),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: HelperFunction.colorWithOpacity(
-                                      Colors.black,
-                                      0.04,
-                                    ),
-                                    blurRadius: 8,
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  m,
-                                  style: interTight(
-                                    size: 11,
-                                    weight: FontWeight.w700,
+                                decoration: BoxDecoration(
+                                  color: _meal == m ? _mealBg(m) : Colors.white,
+                                  border: Border.all(
                                     color: _meal == m
                                         ? _mealColor(m)
-                                        : AppColors.muted,
+                                        : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: HelperFunction.colorWithOpacity(
+                                        Colors.black,
+                                        0.04,
+                                      ),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    m,
+                                    style: interTight(
+                                      size: 11,
+                                      weight: FontWeight.w700,
+                                      color: _meal == m
+                                          ? _mealColor(m)
+                                          : AppColors.muted,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 14),
-
-              // AI input card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: HelperFunction.colorWithOpacity(
-                        Colors.black,
-                        0.07,
-                      ),
-                      blurRadius: 20,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.greenLight,
-                                AppColors.greenDark,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Center(
-                            child: Text('✨', style: TextStyle(fontSize: 18)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'DESCRIBE WHAT YOU ATE',
-                                style: interTight(
-                                  size: 11,
-                                  weight: FontWeight.w600,
-                                  color: AppColors.muted,
-                                  letterSpacing: 1.0,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              TextField(
-                                controller: _controller,
-                                maxLines: 3,
-                                minLines: 2,
-                                style: interTight(
-                                  size: 14,
-                                  weight: FontWeight.w500,
-                                ),
-                                decoration: const InputDecoration(
-                                  hintText:
-                                      'e.g. 2 scrambled eggs with toast and butter...',
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                onChanged: (_) => setState(() {}),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Divider(color: AppColors.border, height: 1),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: _loading || _controller.text.trim().isEmpty
-                            ? null
-                            : _estimate,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                _controller.text.trim().isNotEmpty && !_loading
-                                ? AppColors.dark
-                                : AppColors.inputBg,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (_loading)
-                                const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.muted,
-                                  ),
-                                )
-                              else
-                                const Text(
-                                  '✦ ',
-                                  style: TextStyle(fontSize: 13),
-                                ),
-                              Text(
-                                _loading
-                                    ? ' Analysing...'
-                                    : 'Estimate Calories',
-                                style: interTight(
-                                  size: 13,
-                                  weight: FontWeight.w700,
-                                  color:
-                                      _controller.text.trim().isNotEmpty &&
-                                          !_loading
-                                      ? Colors.white
-                                      : AppColors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Result card
-              if (_result != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.greenBg,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: HelperFunction.colorWithOpacity(
-                        AppColors.green,
-                        0.2,
-                      ),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Text('✦ ', style: TextStyle(fontSize: 16)),
-                          Text(
-                            "Claude's Estimate",
-                            style: interTight(
-                              size: 13,
-                              weight: FontWeight.w700,
-                              color: AppColors.greenText,
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.green,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              'High confidence',
-                              style: interTight(
-                                size: 10,
-                                weight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${_result!['food']}',
-                              style: interTight(
-                                size: 13,
-                                weight: FontWeight.w500,
-                                color: const Color(0xFF2D6A4F),
-                              ),
-                            ),
-                          ),
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '${_result!['calories']}',
-                                  style: interTight(
-                                    size: 34,
-                                    weight: FontWeight.w800,
-                                    color: AppColors.greenText,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: ' kcal',
-                                  style: interTight(
-                                    size: 12,
-                                    weight: FontWeight.w500,
-                                    color: AppColors.greenText,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _miniMacro(
-                            '${_result!['protein']}g',
-                            'Protein',
-                            AppColors.red,
-                          ),
-                          const SizedBox(width: 8),
-                          _miniMacro(
-                            '${_result!['carbs']}g',
-                            'Carbs',
-                            AppColors.orange,
-                          ),
-                          const SizedBox(width: 8),
-                          _miniMacro(
-                            '${_result!['fat']}g',
-                            'Fat',
-                            AppColors.purple,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      GestureDetector(
-                        onTap: _addEntry,
-                        child: Container(
-                          width: double.infinity,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppColors.green,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: HelperFunction.colorWithOpacity(
-                                  AppColors.green,
-                                  0.35,
-                                ),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              '✓  Add to Log',
-                              style: interTight(
-                                size: 14,
-                                weight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              // Quick suggestions
-              if (_result == null) ...[
-                const SizedBox(height: 20),
-                Text(
-                  'QUICK ADD',
-                  style: interTight(
-                    size: 11,
-                    weight: FontWeight.w700,
-                    color: AppColors.muted,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _suggestions
-                      .map(
-                        (s) => GestureDetector(
-                          onTap: () => setState(
-                            () => _controller.text = s
-                                .split(' ')
-                                .skip(1)
-                                .join(' '),
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: AppColors.border),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              s,
-                              style: interTight(
-                                size: 13,
-                                weight: FontWeight.w500,
-                                color: const Color(0xFF4A453E),
                               ),
                             ),
                           ),
@@ -625,10 +297,350 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                       )
                       .toList(),
                 ),
-              ],
+                const SizedBox(height: 14),
 
-              const SizedBox(height: 20),
-            ],
+                // AI input card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: HelperFunction.colorWithOpacity(
+                          Colors.black,
+                          0.07,
+                        ),
+                        blurRadius: 20,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.greenLight,
+                                  AppColors.greenDark,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Center(
+                              child: Text('✨', style: TextStyle(fontSize: 18)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'DESCRIBE WHAT YOU ATE',
+                                  style: interTight(
+                                    size: 11,
+                                    weight: FontWeight.w600,
+                                    color: AppColors.muted,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: _controller,
+                                  maxLines: 3,
+                                  minLines: 2,
+                                  style: interTight(
+                                    size: 14,
+                                    weight: FontWeight.w500,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    hintText:
+                                        'e.g. 2 scrambled eggs with toast and butter...',
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  onChanged: (_) => setState(() {}),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Divider(color: AppColors.border, height: 1),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
+                            if (!_loading ||
+                                _controller.text.trim().isNotEmpty) {
+                              _estimate();
+                            }
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  _controller.text.trim().isNotEmpty &&
+                                      !_loading
+                                  ? AppColors.dark
+                                  : AppColors.inputBg,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_loading)
+                                  const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.muted,
+                                    ),
+                                  )
+                                else
+                                  const Text(
+                                    '✦ ',
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                Text(
+                                  _loading
+                                      ? ' Analysing...'
+                                      : 'Estimate Calories',
+                                  style: interTight(
+                                    size: 13,
+                                    weight: FontWeight.w700,
+                                    color:
+                                        _controller.text.trim().isNotEmpty &&
+                                            !_loading
+                                        ? Colors.white
+                                        : AppColors.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Result card
+                if (_result != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.greenBg,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: HelperFunction.colorWithOpacity(
+                          AppColors.green,
+                          0.2,
+                        ),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('✦ ', style: TextStyle(fontSize: 16)),
+                            Text(
+                              "Claude's Estimate",
+                              style: interTight(
+                                size: 13,
+                                weight: FontWeight.w700,
+                                color: AppColors.greenText,
+                              ),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.green,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'High confidence',
+                                style: interTight(
+                                  size: 10,
+                                  weight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${_result!['food']}',
+                                style: interTight(
+                                  size: 13,
+                                  weight: FontWeight.w500,
+                                  color: const Color(0xFF2D6A4F),
+                                ),
+                              ),
+                            ),
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '${_result!['calories']}',
+                                    style: interTight(
+                                      size: 34,
+                                      weight: FontWeight.w800,
+                                      color: AppColors.greenText,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: ' kcal',
+                                    style: interTight(
+                                      size: 12,
+                                      weight: FontWeight.w500,
+                                      color: AppColors.greenText,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _miniMacro(
+                              '${_result!['protein']}g',
+                              'Protein',
+                              AppColors.red,
+                            ),
+                            const SizedBox(width: 8),
+                            _miniMacro(
+                              '${_result!['carbs']}g',
+                              'Carbs',
+                              AppColors.orange,
+                            ),
+                            const SizedBox(width: 8),
+                            _miniMacro(
+                              '${_result!['fat']}g',
+                              'Fat',
+                              AppColors.purple,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: _addEntry,
+                          child: Container(
+                            width: double.infinity,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppColors.green,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: HelperFunction.colorWithOpacity(
+                                    AppColors.green,
+                                    0.35,
+                                  ),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                '✓  Add to Log',
+                                style: interTight(
+                                  size: 14,
+                                  weight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Quick suggestions
+                if (_result == null) ...[
+                  const SizedBox(height: 20),
+                  Text(
+                    'QUICK ADD',
+                    style: interTight(
+                      size: 11,
+                      weight: FontWeight.w700,
+                      color: AppColors.muted,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _suggestions
+                        .map(
+                          (s) => GestureDetector(
+                            onTap: () => setState(
+                              () => _controller.text = s
+                                  .split(' ')
+                                  .skip(1)
+                                  .join(' '),
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: AppColors.border),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                s,
+                                style: interTight(
+                                  size: 13,
+                                  weight: FontWeight.w500,
+                                  color: const Color(0xFF4A453E),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -653,4 +665,9 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
       ),
     ),
   );
+  @override
+  dispose() {
+    _controller.clear();
+    super.dispose();
+  }
 }
