@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'colors.dart';
@@ -12,7 +13,7 @@ import 'screens/stats_screen.dart';
 import 'widgets/bottom_nav.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -20,7 +21,10 @@ void main() {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  Gemini.init(apiKey: 'AIzaSyBaKdXJqlW-oASXFh8_NHkf7AJi-iAo4tg'); // 🔑 Replace with your key
+  await dotenv.load(fileName: ".env");
+
+  String apiKey = dotenv.env['api_key'] ?? "";
+  Gemini.init(apiKey: apiKey);
 
   runApp(const NutriLogApp());
 }

@@ -136,7 +136,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
       final gemini = Gemini.instance;
 
       final response = await gemini.prompt(
-        model: "",
+        model: "gemini-2.5-flash", // or 'gemini-1.5-pro'
         parts: [
           Part.text(
             'You are a nutrition expert. Respond ONLY with valid JSON: '
