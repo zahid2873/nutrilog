@@ -41,6 +41,7 @@ dependencies:
   google_generative_ai: ^0.4.7
   logger:
   flutter_dotenv: ^6.0.1
+  fluttertoast: ^9.0.0
 
 
 dev_dependencies:

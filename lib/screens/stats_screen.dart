@@ -542,7 +542,7 @@ class _StatsScreenState extends State<StatsScreen> {
             '🥩',
             'Protein',
             state.totalProtein.toInt(),
-            (state.profile.weight * 1.8).round(),
+            (state.profile.weight * 1.6).round(),
             AppColors.red,
           ),
           (

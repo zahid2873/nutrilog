@@ -590,7 +590,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:nutilog/onboarding/onboarding_flow.dart';
 import 'package:nutilog/utils/helper_function.dart';
 
 import '../colors.dart';
@@ -598,6 +597,7 @@ import '../provider/change_notifier_provider.dart';
 import '../state/app_state.dart';
 import '../widgets/calorie_ring_painter.dart';
 import '../widgets/deficit_badge.dart';
+import 'edit_profile_screen.dart';
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 class HomeScreen extends StatelessWidget {
@@ -729,21 +729,30 @@ class HomeScreen extends StatelessWidget {
                           ],
                         ),
 
-                        // Right: prev / today-dot / next arrows
+                        // Right: profile icon + prev / today-dot / next arrows
                         Row(
                           children: [
-                            // IconButton(
-                            //   onPressed: () {
-                            //     context.read<AppState>().load();
-                            //     Navigator.of(context).push(
-                            //       MaterialPageRoute(
-                            //         builder: (context) =>
-                            //             OnboardingFlow(isUpdateProfile: true),
-                            //       ),
-                            //     );
-                            //   },
-                            //   icon: Icon(Icons.person),
-                            // ),
+                            GestureDetector(
+                              onTap: () => Navigator.of(ctx).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const EditProfileScreen(),
+                                ),
+                              ),
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.inputBg,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.person_outline,
+                                  size: 18,
+                                  color: AppColors.dark,
+                                ),
+                              ),
+                            ),
                             _navArrow(
                               icon: Icons.chevron_left,
                               onTap: state.goToPreviousDay,

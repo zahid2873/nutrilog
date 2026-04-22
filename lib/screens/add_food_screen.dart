@@ -1,13 +1,27 @@
 import 'dart:convert';
-import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:nutilog/utils/helper_function.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 // import 'package:google_generative_ai/google_generative_ai.dart';
 import '../colors.dart';
 import '../models/food_entry.dart';
-import '../state/app_state.dart';
 import '../provider/change_notifier_provider.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
+import '../state/app_state.dart';
+
+enum ApiErrorType {
+  badRequest, // 400 INVALID_ARGUMENT
+  billingRequired, // 400 FAILED_PRECONDITION
+  permissionDenied, // 403
+  notFound, // 404
+  rateLimit, // 429
+  serverError, // 500
+  unavailable, // 503
+  timeout, // 504
+  unknown,
+}
 
 // ─── ADD FOOD SCREEN ──────────────────────────────────────────────────────────
 class AddFoodScreen extends StatefulWidget {
@@ -23,7 +37,8 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   bool _loading = false;
   Map<String, dynamic>? _result;
 
-  final _suggestions = [
+  static const _prefsKey = 'quick_add_suggestions';
+  static const _defaultSuggestions = [
     '🥑 Avocado toast',
     '🍌 Banana smoothie',
     '🥚 2 boiled eggs',
@@ -31,12 +46,150 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     '🥜 Peanut butter',
     '🍎 Apple',
   ];
+
+  List<String> _suggestions = [];
+  final Set<String> _selectedSuggestions = {};
+  bool _editMode = false;
+
   final _mealEmojis = {
     'Breakfast': '🍳',
     'Lunch': '🥗',
     'Dinner': '🍽️',
     'Snack': '🍎',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSuggestions();
+  }
+
+  Future<void> _loadSuggestions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList(_prefsKey);
+    setState(() {
+      _suggestions = saved ?? List.from(_defaultSuggestions);
+    });
+  }
+
+  Future<void> _saveSuggestions() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_prefsKey, _suggestions);
+  }
+
+  void _deleteSuggestion(String s) {
+    setState(() {
+      _suggestions.remove(s);
+      _selectedSuggestions.remove(s);
+    });
+    _saveSuggestions();
+  }
+
+  void _addCustomSuggestion(String text) {
+    if (text.trim().isEmpty) return;
+    setState(() => _suggestions.add(text.trim()));
+    _saveSuggestions();
+  }
+
+  String _labelText(String s) {
+    final parts = s.split(' ');
+    if (parts.length > 1 && !parts[0].contains(RegExp(r'[a-zA-Z]'))) {
+      return parts.skip(1).join(' ');
+    }
+    return s;
+  }
+
+  void _applySelected() {
+    if (_selectedSuggestions.isEmpty) return;
+    setState(() {
+      _controller.text = _selectedSuggestions.map(_labelText).join(', ');
+      _selectedSuggestions.clear();
+    });
+  }
+
+  void _showAddSuggestionSheet() {
+    final tc = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Add Quick Item',
+              style: interTight(size: 16, weight: FontWeight.w700),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'You can include an emoji prefix, e.g. 🥗 Greek salad',
+              style: interTight(size: 12, color: AppColors.muted),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: tc,
+              autofocus: true,
+              style: interTight(size: 14),
+              decoration: InputDecoration(
+                hintText: '🥗 Salad',
+                hintStyle: interTight(size: 14, color: AppColors.muted),
+                filled: true,
+                fillColor: AppColors.inputBg,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+              ),
+              onSubmitted: (val) {
+                _addCustomSuggestion(val);
+                Navigator.pop(ctx);
+              },
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () {
+                _addCustomSuggestion(tc.text);
+                Navigator.pop(ctx);
+              },
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.dark,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    'Add',
+                    style: interTight(
+                      size: 14,
+                      weight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // Future<void> _estimate() async {
   //   if (_controller.text.trim().isEmpty) return;
@@ -155,18 +308,57 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
         _loading = false;
       });
     } catch (e) {
-      // Demo fallback — randomised estimate
       debugPrint(e.toString());
-      setState(() {
-        _result = {
-          'calories': 200 + Random().nextInt(300),
-          'food': _controller.text,
-          'protein': 12,
-          'carbs': 28,
-          'fat': 8,
-        };
-        _loading = false;
-      });
+      final type = detectApiError(e.toString());
+      final userMessage = getUserMessage(type);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(userMessage), backgroundColor: Colors.red),
+      );
+      _loading = false;
+    }
+  }
+
+  ApiErrorType detectApiError(String error) {
+    if (error.contains("400")) return ApiErrorType.badRequest;
+    // if (error.contains("FAILED_PRECONDITION")) return ApiErrorType.billingRequired;
+    if (error.contains("403")) return ApiErrorType.permissionDenied;
+    if (error.contains("404")) return ApiErrorType.notFound;
+    if (error.contains("429")) return ApiErrorType.rateLimit;
+    if (error.contains("500")) return ApiErrorType.serverError;
+    if (error.contains("503")) return ApiErrorType.unavailable;
+    if (error.contains("504")) return ApiErrorType.timeout;
+
+    return ApiErrorType.unknown;
+  }
+
+  String getUserMessage(ApiErrorType type) {
+    switch (type) {
+      case ApiErrorType.badRequest:
+        return "Invalid input. Try simpler food description.";
+
+      case ApiErrorType.billingRequired:
+        return "Service not available. Try again later.";
+
+      case ApiErrorType.permissionDenied:
+        return "App configuration error. Please contact support.";
+
+      case ApiErrorType.notFound:
+        return "Requested data not found.";
+
+      case ApiErrorType.rateLimit:
+        return "Too many requests. Please wait a moment.";
+
+      case ApiErrorType.serverError:
+        return "Server error. Trying again may fix it.";
+
+      case ApiErrorType.unavailable:
+        return "Service is busy. Try again shortly.";
+
+      case ApiErrorType.timeout:
+        return "Request took too long. Try shorter input.";
+
+      default:
+        return "Something went wrong.";
     }
   }
 
@@ -591,50 +783,126 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                 // Quick suggestions
                 if (_result == null) ...[
                   const SizedBox(height: 20),
-                  Text(
-                    'QUICK ADD',
-                    style: interTight(
-                      size: 11,
-                      weight: FontWeight.w700,
-                      color: AppColors.muted,
-                      letterSpacing: 1.0,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        'QUICK ADD',
+                        style: interTight(
+                          size: 11,
+                          weight: FontWeight.w700,
+                          color: AppColors.muted,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (_selectedSuggestions.isNotEmpty)
+                        GestureDetector(
+                          onTap: _applySelected,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.dark,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Add ${_selectedSuggestions.length} selected',
+                              style: interTight(
+                                size: 11,
+                                weight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        )
+                      else ...[
+                        GestureDetector(
+                          onTap: () => setState(() {
+                            _editMode = !_editMode;
+                            _selectedSuggestions.clear();
+                          }),
+                          child: Icon(
+                            _editMode
+                                ? Icons.check_rounded
+                                : Icons.edit_outlined,
+                            size: 16,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: _showAddSuggestionSheet,
+                          child: const Icon(
+                            Icons.add_rounded,
+                            size: 18,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: _suggestions
-                        .map(
-                          (s) => GestureDetector(
-                            onTap: () => setState(
-                              () => _controller.text = s
-                                  .split(' ')
-                                  .skip(1)
-                                  .join(' '),
+                    children: _suggestions.map((s) {
+                      final isSelected = _selectedSuggestions.contains(s);
+                      return GestureDetector(
+                        onTap: _editMode
+                            ? null
+                            : () => setState(() {
+                                if (isSelected) {
+                                  _selectedSuggestions.remove(s);
+                                } else {
+                                  _selectedSuggestions.add(s);
+                                }
+                              }),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.dark : Colors.white,
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.dark
+                                  : AppColors.border,
                             ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
                                 s,
                                 style: interTight(
                                   size: 13,
                                   weight: FontWeight.w500,
-                                  color: const Color(0xFF4A453E),
+                                  color: isSelected
+                                      ? Colors.white
+                                      : const Color(0xFF4A453E),
                                 ),
                               ),
-                            ),
+                              if (_editMode) ...[
+                                const SizedBox(width: 6),
+                                GestureDetector(
+                                  onTap: () => _deleteSuggestion(s),
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    size: 14,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        )
-                        .toList(),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ],
 
